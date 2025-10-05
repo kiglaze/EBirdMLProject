@@ -7,7 +7,6 @@ import os
 
 def main():
     # Load csv file into pandas dataframe: output_filtered_species_consolidated/osprey_ca_condor_output.csv
-    #df = pd.read_csv("output_filtered_species_consolidated/osprey_ca_condor_output.csv", dtype="string")
     df = pd.read_csv(
         'output_filtered_species_consolidated/osprey_ca_condor_output.csv',
         usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE'],
@@ -21,7 +20,7 @@ def main():
     generate_raw_maps(df, "California Condor", "map_output_ca_condor_raw")
 
 def generate_raw_maps(df, species_name, output_directory_name):
-    df = df[df['COMMON NAME'] == "Osprey"]
+    df = df[df['COMMON NAME'] == species_name]
     most_recent_date = df['OBSERVATION DATE'].max()
 
     #df_most_recent = df[df['OBSERVATION DATE'] == most_recent_date]
