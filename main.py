@@ -2,6 +2,7 @@ import gzip
 import shutil
 import pandas as pd
 import os
+import glob
 
 file_path = "/Volumes/LaCie/CSC522-2025/project/ebd_relAug-2025/ebd_relAug-2025.txt.gz"
 preview_file_path = "ebd_preview.txt"
@@ -47,7 +48,7 @@ def process_preview():
         for species in unique_bird_species:
             f.write(f"{species}\n")
 
-def main():
+def filter_original_data_by_species_loc():
     chunks_count_limit = 10
     # Possible additional species: "Atlantic Puffin", "Horned Puffin", "Tufted Puffin", "puffin sp."
     filter_species_list = ["California Condor", "Osprey"]
@@ -62,6 +63,9 @@ def main():
     if not os.path.exists("output"):
         os.makedirs("output")
 
+    if not os.path.exists("output_osprey_ca_condor"):
+        os.makedirs("output_osprey_ca_condor")
+
     for i, chunk_df in enumerate(reader):
         unique_bird_species = chunk_df["COMMON NAME"].unique()
         # Write unique species to a file (appending)
@@ -73,7 +77,7 @@ def main():
         filtered_df = chunk_df[chunk_df['COMMON NAME'].isin(filter_species_list)]
         filtered_df_concatenated = pd.concat([filtered_df_concatenated, filtered_df], ignore_index=True)
         if (i + 1) % chunks_count_limit == 0:
-            output_file = f"output/filtered_bird_data_{batch_num}.csv"
+            output_file = f"output_osprey_ca_condor/filtered_bird_data_{batch_num}.csv"
             filtered_df_concatenated.to_csv(output_file, index=False)
             filtered_df_concatenated = pd.DataFrame()
             batch_num += 1
@@ -87,6 +91,18 @@ def main():
                     f.write(f"{species}\n")
     # Write filtered_df_concatenated to a CSV file
     filtered_df_concatenated.to_csv("filtered_bird_data.csv", index=False)
+
+def combine_filtered_bird_data():
+    csv_files = glob.glob("output_osprey_ca_condor/*.csv")
+    df_list = [pd.read_csv(f, dtype="string") for f in csv_files]
+    combined_df = pd.concat(df_list, ignore_index=True)
+    combined_df.to_csv("output_filtered_species_consolidated/osprey_ca_condor_output.csv", index=False)
+
+def main():
+    if not os.path.exists("output_filtered_species_consolidated"):
+        os.makedirs("output_filtered_species_consolidated")
+    df = pd.read_csv('output_filtered_species_consolidated/osprey_ca_condor_output.csv', dtype="string")
+    print(df['COMMON NAME'].value_counts())
 
 if __name__ == "__main__":
     main()
