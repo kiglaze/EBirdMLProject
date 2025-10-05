@@ -5,6 +5,7 @@ import os
 def main():
     # "map_output_raw"
     combine_imgs_to_video("map_output_osprey_raw")
+    combine_imgs_to_video("map_output_ca_condor_raw")
 
 def combine_imgs_to_video(input_image_directory):
     folder = Path(input_image_directory)
