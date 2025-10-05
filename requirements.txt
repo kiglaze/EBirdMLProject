@@ -1,0 +1,5 @@
+pandas
+folium
+plotly
+imageio
+kaleido
