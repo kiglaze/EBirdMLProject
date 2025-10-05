@@ -5,37 +5,28 @@ import imageio
 import datetime
 import os
 
-#def main():
-
-if __name__ == "__main__":
+def main():
     # Load csv file into pandas dataframe: output_filtered_species_consolidated/osprey_ca_condor_output.csv
-    df = pd.read_csv("output_filtered_species_consolidated/osprey_ca_condor_output.csv", dtype="string")
+    #df = pd.read_csv("output_filtered_species_consolidated/osprey_ca_condor_output.csv", dtype="string")
+    df = pd.read_csv(
+        'output_filtered_species_consolidated/osprey_ca_condor_output.csv',
+        usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE'],
+        dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str},
+        parse_dates=['OBSERVATION DATE']
+    )
     print(df.head())
+    print(df.dtypes)
     df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])]
+    generate_raw_maps(df, "Osprey", "map_output_osprey_raw")
+    generate_raw_maps(df, "California Condor", "map_output_ca_condor_raw")
+
+def generate_raw_maps(df, species_name, output_directory_name):
     df = df[df['COMMON NAME'] == "Osprey"]
     most_recent_date = df['OBSERVATION DATE'].max()
-    df['OBSERVATION DATE'] = pd.to_datetime(df['OBSERVATION DATE'])
-    df['LATITUDE'] = df['LATITUDE'].astype(float)
-    df['LONGITUDE'] = df['LONGITUDE'].astype(float)
 
     #df_most_recent = df[df['OBSERVATION DATE'] == most_recent_date]
 
     print(list(df.columns))
-
-    # # Create a map centered at the mean location
-    # center_lat = df['LATITUDE'].astype(float).mean()
-    # center_lon = df['LONGITUDE'].astype(float).mean()
-    # m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
-    #
-    # # Add points
-    # for _, row in df.iterrows():
-    #     folium.Marker(
-    #         location=[float(row['LATITUDE']), float(row['LONGITUDE'])],
-    #         popup=row.get('COMMON NAME', '')
-    #     ).add_to(m)
-    #
-    # # Save to HTML
-    # m.save('map.html')
 
     start_date = datetime.date(2025, 6, 1)
     end_date = datetime.date(2025, 8, 31)
@@ -45,8 +36,8 @@ if __name__ == "__main__":
     images = []
 
     # Create directory "map_output" if it doesn't exist
-    if not os.path.exists("map_output_raw"):
-        os.makedirs("map_output_raw")
+    if not os.path.exists(output_directory_name):
+        os.makedirs(output_directory_name)
 
     for frame in frames:
         print(frame)
@@ -57,7 +48,8 @@ if __name__ == "__main__":
             projection='natural earth'
         )
         fig.update_geos(showcountries=True)
-        img_path = f"map_output_raw/frame_{frame}.png"
+        img_path = f"{output_directory_name}/frame_{frame}.png"
         fig.write_image(img_path)
 
-    #main()
+if __name__ == "__main__":
+    main()
