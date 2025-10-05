@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import glob
 
-file_path = "/Volumes/LaCie/CSC522-2025/project/ebd_relAug-2025/ebd_relAug-2025.txt.gz"
+file_path = "/Volumes/LaCie/CSC522-2025/project/ebd_relAug-2025/redownloads0/ebd_relAug-2025.txt.gz"
 preview_file_path = "ebd_preview.txt"
 n_lines = 10000     # how many lines to copy
 rows_per_chunk = 1000000  # how many rows to read at a time
@@ -48,10 +48,10 @@ def process_preview():
         for species in unique_bird_species:
             f.write(f"{species}\n")
 
-def filter_original_data_by_species_loc():
+def filter_original_data_by_species_loc(output_dir_name, filter_species_list):
     chunks_count_limit = 10
     # Possible additional species: "Atlantic Puffin", "Horned Puffin", "Tufted Puffin", "puffin sp."
-    filter_species_list = ["California Condor", "Osprey"]
+    #filter_species_list = ["California Condor", "Osprey"]
     filtered_df_concatenated = pd.DataFrame()
     reader = pd.read_csv(file_path,
                          sep="\t",
@@ -63,8 +63,8 @@ def filter_original_data_by_species_loc():
     if not os.path.exists("output"):
         os.makedirs("output")
 
-    if not os.path.exists("output_osprey_ca_condor"):
-        os.makedirs("output_osprey_ca_condor")
+    if not os.path.exists(output_dir_name):
+        os.makedirs(output_dir_name)
 
     for i, chunk_df in enumerate(reader):
         unique_bird_species = chunk_df["COMMON NAME"].unique()
@@ -77,7 +77,7 @@ def filter_original_data_by_species_loc():
         filtered_df = chunk_df[chunk_df['COMMON NAME'].isin(filter_species_list)]
         filtered_df_concatenated = pd.concat([filtered_df_concatenated, filtered_df], ignore_index=True)
         if (i + 1) % chunks_count_limit == 0:
-            output_file = f"output_osprey_ca_condor/filtered_bird_data_{batch_num}.csv"
+            output_file = f"{output_dir_name}/filtered_bird_data_{batch_num}.csv"
             filtered_df_concatenated.to_csv(output_file, index=False)
             filtered_df_concatenated = pd.DataFrame()
             batch_num += 1
@@ -99,10 +99,13 @@ def combine_filtered_bird_data():
     combined_df.to_csv("output_filtered_species_consolidated/osprey_ca_condor_output.csv", index=False)
 
 def main():
-    if not os.path.exists("output_filtered_species_consolidated"):
-        os.makedirs("output_filtered_species_consolidated")
-    df = pd.read_csv('output_filtered_species_consolidated/osprey_ca_condor_output.csv', dtype="string")
-    print(df['COMMON NAME'].value_counts())
+    #if not os.path.exists("output_filtered_species_consolidated"):
+    #    os.makedirs("output_filtered_species_consolidated")
+    #df = pd.read_csv('output_filtered_species_consolidated/osprey_ca_condor_output.csv', dtype="string")
+    #print(df['COMMON NAME'].value_counts())
+
+    #filter_original_data_by_species_loc("output_osprey_ca_condor", ["California Condor", "Osprey"])
+    filter_original_data_by_species_loc("output_puffins", ["Atlantic Puffin", "Horned Puffin", "Tufted Puffin", "puffin sp."])
 
 if __name__ == "__main__":
     main()
