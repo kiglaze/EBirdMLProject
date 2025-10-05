@@ -1,11 +1,16 @@
 from pathlib import Path
 import imageio.v2 as imageio  # pip install imageio imageio-ffmpeg
+import os
 
-if __name__ == "__main__":
-    folder = Path("map_output_raw")
+def main():
+    # "map_output_raw"
+    combine_imgs_to_video("map_output_osprey_raw")
+
+def combine_imgs_to_video(input_image_directory):
+    folder = Path(input_image_directory)
     frames = sorted(folder.glob("frame_*.png"))  # adjust pattern if needed
     if not frames:
-        raise SystemExit("No PNGs found in map_output/")
+        raise SystemExit(f"No PNGs found in {input_image_directory}")
 
     # (Optional) ensure consistent size by resizing to the first frame’s size
     im0 = imageio.imread(frames[0])
@@ -20,7 +25,15 @@ if __name__ == "__main__":
             im = imageio.core.util.Array(im)
         return im
 
-    with imageio.get_writer("animation.mp4", fps=2, codec="libx264", macro_block_size=None) as writer:
+    # Create directory "animations" if it doesn't exist
+    if not os.path.exists("animations"):
+        os.makedirs("animations")
+
+    with imageio.get_writer(f"animations/{input_image_directory}_animation.mp4", fps=2, codec="libx264", macro_block_size=None) as writer:
         for p in frames:
             writer.append_data(read_and_fit(p))
-    print("Wrote animation.mp4")
+    print(f"Wrote {input_image_directory}_animation.mp4")
+
+if __name__ == "__main__":
+    main()
+
