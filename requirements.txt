@@ -3,3 +3,7 @@ folium
 plotly
 imageio
 kaleido
+geopandas
+shapely
+scikit-learn
+numpy
