@@ -4,8 +4,14 @@ import os
 
 def main():
     # "map_output_raw"
-    combine_imgs_to_video("map_output_osprey_raw")
-    combine_imgs_to_video("map_output_ca_condor_raw")
+    #combine_imgs_to_video("map_output_osprey_raw")
+    #combine_imgs_to_video("map_output_ca_condor_raw")
+
+    combine_imgs_to_video("map_output_osprey_dbscan_weekly")
+    combine_imgs_to_video("map_output_osprey_raw_weekly")
+    combine_imgs_to_video("map_output_osprey_dbscan_seasonal")
+    combine_imgs_to_video("map_output_osprey_raw_seasonal")
+
 
 def combine_imgs_to_video(input_image_directory):
     folder = Path(input_image_directory)
@@ -18,6 +24,7 @@ def combine_imgs_to_video(input_image_directory):
     H, W = im0.shape[:2]
 
     def read_and_fit(p):
+        print(p)
         im = imageio.imread(p)
         if im.shape[:2] != (H, W):
             # quick resize to match the first frame
