@@ -78,7 +78,7 @@ def main():
     if not os.path.exists(export_directory):
         os.makedirs(export_directory)
     # You can now proceed with further analysis or export
-    df_week_year.to_csv(f"{export_directory}/output_glacier_bay_weekly.csv", index=False)
+    df_week_year.to_csv(f"{export_directory}/osprey_glacier_bay_weekly.csv", index=False)
 
 
 
