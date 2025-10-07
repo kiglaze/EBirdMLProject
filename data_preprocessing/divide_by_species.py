@@ -21,7 +21,7 @@ def main():
     unique_species = df['COMMON NAME'].unique()
     for species in unique_species:
         print(species)
-        output_filepath = f"output_by_species/{species.replace(' ', '_').lower()}_data.csv"
+        output_filepath = f"output_by_species/originals/{species.replace(' ', '_').lower()}_data.csv"
         os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
         df[df['COMMON NAME'] == species].to_csv(output_filepath, index=False)
 
