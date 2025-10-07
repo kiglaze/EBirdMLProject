@@ -4,26 +4,11 @@ import pandas as pd
 import os
 import glob
 
-file_path = "/Volumes/LaCie/CSC522-2025/project/ebd_relAug-2025/redownloads0/ebd_relAug-2025.txt.gz"
+#file_path = "/Volumes/LaCie/CSC522-2025/project/ebd_relAug-2025/redownloads0/ebd_relAug-2025.txt.gz"
+file_path = "/Volumes/Extreme SSD/CSC522-25/project/ebd_relAug-2025/ebd_relAug-2025.txt.gz"
 preview_file_path = "ebd_preview.txt"
 n_lines = 10000     # how many lines to copy
 rows_per_chunk = 1000000  # how many rows to read at a time
-
-def print_preview():
-    with gzip.open(file_path, "rt", encoding="utf-8", errors="ignore") as f:
-        for i, line in enumerate(f):
-            print(line.rstrip())
-            if i >= 9:  # print first 10 lines
-                break
-def write_preview():
-    with gzip.open(file_path, "rt", encoding="utf-8", errors="ignore") as fin, \
-        open(preview_file_path, "w", encoding="utf-8") as fout:
-        for i, line in enumerate(fin):
-            fout.write(line)
-            if i + 1 >= n_lines:
-                break
-
-    print(f"Wrote first {n_lines} lines to {preview_file_path}")
 
 def process_preview():
     # Read only the one column; pandas will decompress on the fly.
@@ -105,6 +90,7 @@ def main():
     #print(df['COMMON NAME'].value_counts())
 
     #filter_original_data_by_species_loc("output_osprey_ca_condor", ["California Condor", "Osprey"])
+
     filter_original_data_by_species_loc("output_puffins", ["Atlantic Puffin", "Horned Puffin", "Tufted Puffin", "puffin sp."])
 
 if __name__ == "__main__":
