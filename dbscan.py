@@ -33,10 +33,8 @@ def find_clusters_by_geo_loc(df):
         algorithm="ball_tree"
     ).fit(coords_radians)
 
-    df["CLUSTER"] = db.labels_
+    df = df.assign(CLUSTER=db.labels_)
     return df
 
 # if __name__ == "__main__":
 #     main()
-
-
