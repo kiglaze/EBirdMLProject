@@ -39,6 +39,10 @@ def add_date_columns_to_species_files(input_directory, output_directory):
                 df['YEAR'] - 1,
                 df['YEAR']
             )
+
+            df['LATITUDE_RADIANS'] = np.radians(df['LATITUDE'])
+            df['LONGITUDE_RADIANS'] = np.radians(df['LONGITUDE'])
+
             output_filepath = os.path.join(output_directory, filename)
             df.to_csv(output_filepath, index=False)
             print(f"Processed and saved: {output_filepath}")
