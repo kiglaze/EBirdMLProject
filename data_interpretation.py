@@ -9,6 +9,8 @@ import gc
 import time
 import plotly.io as pio
 import json, urllib.request, shutil
+from dbscan import find_clusters_by_geo_loc_no_noise
+
 
 TOPO_DIR = os.path.abspath("plotly_topojson")
 FILES = [
@@ -61,8 +63,14 @@ def main():
     print(df.dtypes)
     df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])]
     #generate_raw_maps(df, "California Condor", "map_output_ca_condor_raw")
-    #generate_raw_maps(df, "Osprey", "map_output_osprey_raw_seasonal", True)
-    generate_raw_maps(df, "Osprey", "map_output_osprey_raw_weekly", False)
+
+    generate_raw_maps(df, "Osprey", "map_output_osprey_raw_weekly", False, False, 1)
+    generate_raw_maps(df, "Osprey", "map_output_osprey_dbscan_weekly", False, True, 1)
+
+    # generate_raw_maps(df, "Osprey", "map_output_osprey_raw_seasonal", True, False, 0.1)
+    # generate_raw_maps(df, "Osprey", "map_output_osprey_dbscan_seasonal", True, True, 0.1)
+
+    #generate_raw_maps(df, "Osprey", "map_output_osprey_raw_weekly", False)
 
 
 def get_season(date):
@@ -82,7 +90,7 @@ def get_season_start_year(date, season):
     else:
         return date.year
 
-def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True):
+def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True, running_dbscan=False, sample_frac=1.0):
     df = df[df['COMMON NAME'] == species_name]
     #most_recent_date = df['OBSERVATION DATE'].max()
 
@@ -132,10 +140,12 @@ def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True)
             for season_index in [1, 2, 3, 4]:
                 dfi = df[(df['SEASON_START_YEAR'] == season_year) & (df['SEASON_INDEX'] == season_index)]
                 # Sample 10% of dfi if more than 100 rows
-                if len(dfi) > 100:
-                    dfi = dfi.sample(frac=0.1, random_state=1)
+                if sample_frac < 1:
+                    dfi = dfi.sample(frac=sample_frac, random_state=1)
                 if dfi.empty:
                     continue
+                if running_dbscan == True:
+                    dfi = find_clusters_by_geo_loc_no_noise(dfi)
                 print(f"Generating map for {season_index} {season_year} with {len(dfi)} points")
                 generate_season_plot_map(dfi, species_name, output_directory_name, season_index, season_year)
             time.sleep(0.5)
@@ -143,8 +153,12 @@ def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True)
         for year in sorted_years:
             for week_idx in range(1, max_sorted_week+1):
                 dfi = df[(df['YEAR'] == year) & (df['WEEK_IN_YEAR'] == week_idx)]
+                if sample_frac < 1:
+                    dfi = dfi.sample(frac=sample_frac, random_state=1)
                 if dfi.empty:
                     continue
+                if running_dbscan == True:
+                    dfi = find_clusters_by_geo_loc_no_noise(dfi)
                 print(f"Generating map for week {week_idx} {year} with {len(dfi)} points")
                 generate_weekly_plot_map(dfi, species_name, output_directory_name, week_idx, year)
                 time.sleep(0.5)
