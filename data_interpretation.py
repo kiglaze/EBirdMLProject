@@ -54,41 +54,19 @@ def main():
 
     # Load csv file into pandas dataframe: output_filtered_species_consolidated/osprey_ca_condor_output.csv
     df = pd.read_csv(
-        'output_filtered_species_consolidated/osprey_ca_condor_output.csv',
-        usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE'],
-        dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str},
+        'data_preprocessing/output_by_species/with_added_cols/osprey_data.csv',
+        usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE', 'MONTH', 'YEAR', 'WEEK_IN_YEAR', 'SEASON', 'SEASON_INDEX', 'SEASON_START_YEAR', 'LATITUDE_RADIANS', 'LONGITUDE_RADIANS'],
+        dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str, 'MONTH': int, 'YEAR': int, 'WEEK_IN_YEAR': int, 'SEASON': str, 'SEASON_INDEX': int, 'SEASON_START_YEAR': int, 'LATITUDE_RADIANS': float, 'LONGITUDE_RADIANS': float},
         parse_dates=['OBSERVATION DATE']
     )
-    print(df.head())
-    print(df.dtypes)
-    df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])]
-    #generate_raw_maps(df, "California Condor", "map_output_ca_condor_raw")
 
-    generate_raw_maps(df, "Osprey", "map_output_osprey_raw_weekly", False, False, 1)
+    df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])].copy()
+
+    # generate_raw_maps(df, "Osprey", "map_output_osprey_raw_weekly", False, False, 1)
     generate_raw_maps(df, "Osprey", "map_output_osprey_dbscan_weekly", False, True, 1)
 
     # generate_raw_maps(df, "Osprey", "map_output_osprey_raw_seasonal", True, False, 0.1)
     # generate_raw_maps(df, "Osprey", "map_output_osprey_dbscan_seasonal", True, True, 0.1)
-
-    #generate_raw_maps(df, "Osprey", "map_output_osprey_raw_weekly", False)
-
-
-def get_season(date):
-    month = date.month
-    if month in [3, 4, 5]:
-        return 'Spring'
-    elif month in [6, 7, 8]:
-        return 'Summer'
-    elif month in [9, 10, 11]:
-        return 'Fall'
-    else:
-        return 'Winter'
-
-def get_season_start_year(date, season):
-    if season == 'Winter' and date.month in [1, 2]:
-        return date.year - 1
-    else:
-        return date.year
 
 def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True, running_dbscan=False, sample_frac=1.0):
     df = df[df['COMMON NAME'] == species_name]
@@ -101,24 +79,6 @@ def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True,
     start_date = datetime.date(2023, 3, 1)
     end_date = datetime.date(2025, 8, 31)
     df = df[(df['OBSERVATION DATE'] >= pd.Timestamp(start_date)) & (df['OBSERVATION DATE'] <= pd.Timestamp(end_date))]
-
-    df['MONTH'] = df['OBSERVATION DATE'].dt.month
-    df['YEAR'] = df['OBSERVATION DATE'].dt.year
-    # Add a column named 'WEEK_IN_YEAR' that extracts the week in year from 'OBSERVATION DATE'
-    df['WEEK_IN_YEAR'] = df['OBSERVATION DATE'].dt.isocalendar().week
-    # Add a column named 'SEASON' that converts 'OBSERVATION DATE' to season (Spring, Summer, Fall, Winter)
-    df['SEASON'] = df['OBSERVATION DATE'].apply(get_season)
-    # Add column for 'SEASON_INDEX' that is 1 for Spring, 2 for Summer, 3 for Fall, 4 for Winter
-    season_mapping = {'Spring': 1, 'Summer': 2, 'Fall': 3, 'Winter': 4}
-    df['SEASON_INDEX'] = df['SEASON'].map(season_mapping)
-    # Add a column named 'SEASON_START_YEAR' that sets the year when the season starts. Uses function get_season_start_year()
-    df['SEASON_START_YEAR'] = df['YEAR']
-
-    df['SEASON_START_YEAR'] = np.where(
-        (df['SEASON'] == 'Winter') & (df['MONTH'].isin([1, 2])),
-        df['YEAR'] - 1,
-        df['YEAR']
-    )
 
     # Sort and get unique years
     sorted_years = np.sort(df['YEAR'].unique())

@@ -9,21 +9,6 @@ from shapely.geometry import Point
 from sklearn.cluster import DBSCAN
 import numpy as np
 
-def main():
-    # Load csv file into pandas dataframe: output_filtered_species_consolidated/osprey_ca_condor_output.csv
-    df = pd.read_csv(
-        'output_filtered_species_consolidated/osprey_ca_condor_output.csv',
-        usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE'],
-        dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str},
-        parse_dates=['OBSERVATION DATE']
-    )
-
-    df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])]
-    #df = df[df['COMMON NAME'] == "California Condor"]
-    df = df[df['COMMON NAME'] == "Osprey"]
-
-    df = find_clusters_by_geo_loc_no_noise(df)
-
 def find_clusters_by_geo_loc_no_noise(df):
     df = find_clusters_by_geo_loc(df)
     print(len(df))
@@ -33,9 +18,6 @@ def find_clusters_by_geo_loc_no_noise(df):
 
 # observation_date in format '2025-08-31'
 def find_clusters_by_geo_loc(df):
-    df['LATITUDE_RADIANS'] = np.radians(df['LATITUDE'])
-    df['LONGITUDE_RADIANS'] = np.radians(df['LONGITUDE'])
-
     coords_radians = df[["LATITUDE_RADIANS", "LONGITUDE_RADIANS"]].to_numpy()
 
     # Define eps in km and convert to radians
