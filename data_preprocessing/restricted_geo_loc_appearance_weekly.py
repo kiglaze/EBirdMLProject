@@ -1,3 +1,5 @@
+from typing import Any
+
 import pandas as pd
 import datetime
 import os
@@ -10,17 +12,42 @@ class Region:
     lon_range: tuple
 
 def main():
+    start_date = datetime.date(2015, 3, 1)
+    end_date = datetime.date(2025, 8, 31)
+
+    # osprey_df = prepare_species_data_by_country_time_range('osprey_data.csv', start_date, end_date)
+
+    # Glacier Bay, Alaska -- 58°N to 60°N, 137°W to 135°W
+    # glacier_bay_region = Region((58.0, 60.0), (-137.0, -135.0))
+    # get_weekly_presence_by_loc_data(osprey_df, glacier_bay_region, "osprey_glacier_bay_weekly.csv")
+
+    # Grand Canyon -- Latitude: 35.7°N to 36.5°N; Longitude: −113.5°W to −111.8°W
+    grand_canyon_region = Region((35.0, 37.0), (-113.0, -111.0))
+
+    ca_condor_df = prepare_species_data_by_country_time_range('california_condor_data.csv', start_date, end_date)
+    get_weekly_presence_by_loc_data(ca_condor_df, grand_canyon_region, "ca_condor_grand_canyon_weekly.csv")
+
+    # altantic_puffin_df = prepare_species_data_by_country_time_range('atlantic_puffin_data.csv', start_date, end_date)
+
+
+def prepare_species_data_by_country_time_range(input_species_filename: str, start_date, end_date) -> Any:
     df = pd.read_csv(
-        'output_by_species/with_added_cols/osprey_data.csv',
-        usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE', 'MONTH', 'YEAR', 'WEEK_IN_YEAR', 'SEASON', 'SEASON_INDEX', 'SEASON_START_YEAR', 'LATITUDE_RADIANS', 'LONGITUDE_RADIANS'],
-        dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str, 'MONTH': int, 'YEAR': int, 'WEEK_IN_YEAR': int, 'SEASON': str, 'SEASON_INDEX': int, 'SEASON_START_YEAR': int, 'LATITUDE_RADIANS': float, 'LONGITUDE_RADIANS': float},
+        f"output_by_species/with_added_cols/{input_species_filename}",
+        usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID',
+                 'OBSERVATION TYPE', 'MONTH', 'YEAR', 'WEEK_IN_YEAR', 'SEASON', 'SEASON_INDEX', 'SEASON_START_YEAR',
+                 'LATITUDE_RADIANS', 'LONGITUDE_RADIANS'],
+        dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str,
+               'OBSERVER ID': str, 'OBSERVATION TYPE': str, 'MONTH': int, 'YEAR': int, 'WEEK_IN_YEAR': int,
+               'SEASON': str, 'SEASON_INDEX': int, 'SEASON_START_YEAR': int, 'LATITUDE_RADIANS': float,
+               'LONGITUDE_RADIANS': float},
         parse_dates=['OBSERVATION DATE']
     )
     df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])].copy()
-    start_date = datetime.date(2015, 3, 1)
-    end_date = datetime.date(2025, 8, 31)
     df = df[(df['OBSERVATION DATE'] >= pd.Timestamp(start_date)) & (df['OBSERVATION DATE'] <= pd.Timestamp(end_date))]
+    return df
 
+
+def get_weekly_presence_by_loc_data(df, glacier_bay_region: Region, output_filename):
     first_obs_date = df['OBSERVATION DATE'].min()
     last_obs_date = df['OBSERVATION DATE'].max()
 
@@ -40,15 +67,11 @@ def main():
             week_year_combinations.append((year, week))
             print(f"Year: {year}, Week: {week}")
 
-
     # Create a DataFrame from the week_year_combinations list
     df_week_year = pd.DataFrame(week_year_combinations, columns=['YEAR', 'WEEK_IN_YEAR'])
     df_week_year['OBSERVATION_COUNT'] = 0  # Initialize observation count to 0
     df_week_year = df_week_year.sort_values(['YEAR', 'WEEK_IN_YEAR']).reset_index(drop=True)
     print(df_week_year)
-
-    # 58°N to 60°N, 137°W to 135°W
-    glacier_bay_region = Region((58.0, 60.0), (-137.0, -135.0))
 
     lat_range = glacier_bay_region.lat_range
     lon_range = glacier_bay_region.lon_range
@@ -67,7 +90,8 @@ def main():
     for (year, week), group in grouped:
         print(f"YEAR: {year}, WEEK: {week}, Records: {len(group)}")
         # Find row in df_week_year with matchin YEAR and WEEK_IN_YEAR, then update OBSERVATION_COUNT with len(group)
-        df_week_year.loc[(df_week_year['YEAR'] == year) & (df_week_year['WEEK_IN_YEAR'] == week), 'OBSERVATION_COUNT'] = len(group)
+        df_week_year.loc[
+            (df_week_year['YEAR'] == year) & (df_week_year['WEEK_IN_YEAR'] == week), 'OBSERVATION_COUNT'] = len(group)
 
     # Add a column to df_week_year that is 1 if OBSERVATION_COUNT > 0 else 0
     df_week_year['OBSERVATION_PRESENT'] = 0
@@ -78,8 +102,7 @@ def main():
     if not os.path.exists(export_directory):
         os.makedirs(export_directory)
     # You can now proceed with further analysis or export
-    df_week_year.to_csv(f"{export_directory}/osprey_glacier_bay_weekly.csv", index=False)
-
+    df_week_year.to_csv(f"{export_directory}/{output_filename}", index=False)
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ def main():
 
     # Load csv file into pandas dataframe: output_filtered_species_consolidated/osprey_ca_condor_output.csv
     df = pd.read_csv(
-        'data_preprocessing/output_by_species/with_added_cols/osprey_data.csv',
+        'data_preprocessing/output_by_species/with_added_cols/atlantic_puffin_data.csv',
         usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE', 'MONTH', 'YEAR', 'WEEK_IN_YEAR', 'SEASON', 'SEASON_INDEX', 'SEASON_START_YEAR', 'LATITUDE_RADIANS', 'LONGITUDE_RADIANS'],
         dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str, 'MONTH': int, 'YEAR': int, 'WEEK_IN_YEAR': int, 'SEASON': str, 'SEASON_INDEX': int, 'SEASON_START_YEAR': int, 'LATITUDE_RADIANS': float, 'LONGITUDE_RADIANS': float},
         parse_dates=['OBSERVATION DATE']
@@ -63,10 +63,20 @@ def main():
     df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])].copy()
 
     # generate_raw_maps(df, "Osprey", "map_output_osprey_raw_weekly", False, False, 1)
-    generate_raw_maps(df, "Osprey", "map_output_osprey_dbscan_weekly", False, True, 1)
+    # generate_raw_maps(df, "Osprey", "map_output_osprey_dbscan_weekly", False, True, 1)
 
     # generate_raw_maps(df, "Osprey", "map_output_osprey_raw_seasonal", True, False, 0.1)
     # generate_raw_maps(df, "Osprey", "map_output_osprey_dbscan_seasonal", True, True, 0.1)
+
+    generate_raw_maps(df, "Atlantic Puffin", "map_output_puffin_raw_weekly", False, False, 1)
+    generate_raw_maps(df, "Atlantic Puffin", "map_output_puffin_dbscan_weekly", False, True, 1)
+    generate_raw_maps(df, "Atlantic Puffin", "map_output_puffin_raw_seasonal", True, False, 1)
+    generate_raw_maps(df, "Atlantic Puffin", "map_output_puffin_dbscan_seasonal", True, True, 1)
+
+    generate_raw_maps(df, "California Condor", "map_output_ca_condor_raw_weekly", False, False, 1)
+    generate_raw_maps(df, "California Condor", "map_output_ca_condor_dbscan_weekly", False, True, 1)
+    generate_raw_maps(df, "California Condor", "map_output_ca_condor_raw_seasonal", True, False, 1)
+    generate_raw_maps(df, "California Condor", "map_output_ca_condor_dbscan_seasonal", True, True, 1)
 
 def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True, running_dbscan=False, sample_frac=1.0):
     df = df[df['COMMON NAME'] == species_name]
@@ -150,6 +160,7 @@ def generate_weekly_plot_map(dfi, species_name, output_directory_name, week_inde
         os.makedirs(output_directory_name)
     plot_title = f"{species_name} Observations - Week {week_index} {year}"
     img_path = f"{output_directory_name}/frame_{year}_week_{week_index:02d}.png"
+    print(f"Image path: {img_path}")
     generate_plot_map(dfi, img_path, plot_title, week_index, year)
 
 def generate_plot_map(dfi, img_path: str, plot_title: str, time_increment_indicator: int, year):
