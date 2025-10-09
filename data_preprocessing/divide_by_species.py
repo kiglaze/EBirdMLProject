@@ -5,7 +5,9 @@ import pandas as pd
 import os
 
 def main():
-    input_file_path = '../output_filtered_species_consolidated/osprey_ca_condor_output.csv'
+    # input_file_path = '../output_filtered_species_consolidated/osprey_ca_condor_output.csv'
+    input_file_path = '../output_filtered_species_consolidated/puffins_output.csv'
+
     # species_list_osprey_condor = ["California Condor", "Osprey"]
     # species_list_puffins = ["Atlantic Puffin", "Horned Puffin", "Tufted Puffin", "puffin sp."]
     df = pd.read_csv(
