@@ -29,7 +29,7 @@ def process_preview():
     print(filtered_df)
 
     unique_bird_species = preview_df["COMMON NAME"].unique()
-    with open("unique_bird_species.txt", "w", encoding="utf-8") as f:
+    with open("../unique_bird_species.txt", "w", encoding="utf-8") as f:
         for species in unique_bird_species:
             f.write(f"{species}\n")
 
@@ -54,7 +54,7 @@ def filter_original_data_by_species_loc(output_dir_name, filter_species_list):
     for i, chunk_df in enumerate(reader):
         unique_bird_species = chunk_df["COMMON NAME"].unique()
         # Write unique species to a file (appending)
-        with open("unique_bird_species.txt", "a", encoding="utf-8") as f:
+        with open("../unique_bird_species.txt", "a", encoding="utf-8") as f:
             for species in unique_bird_species:
                 f.write(f"{species}\n")
         print(f"Processing chunk {i+1} (shape: {chunk_df.shape})")
@@ -69,19 +69,13 @@ def filter_original_data_by_species_loc(output_dir_name, filter_species_list):
             print(f"Wrote filtered data to {output_file} and reset DataFrame.")
 
             # Make all values in unique_bird_species.txt unique
-            with open("unique_bird_species.txt", "r", encoding="utf-8") as f:
+            with open("../unique_bird_species.txt", "r", encoding="utf-8") as f:
                 unique_species = set(f.read().splitlines())
-            with open("unique_bird_species.txt", "w", encoding="utf-8") as f:
+            with open("../unique_bird_species.txt", "w", encoding="utf-8") as f:
                 for species in unique_species:
                     f.write(f"{species}\n")
     # Write filtered_df_concatenated to a CSV file
     filtered_df_concatenated.to_csv("filtered_bird_data.csv", index=False)
-
-def combine_filtered_bird_data():
-    csv_files = glob.glob("output_osprey_ca_condor/*.csv")
-    df_list = [pd.read_csv(f, dtype="string") for f in csv_files]
-    combined_df = pd.concat(df_list, ignore_index=True)
-    combined_df.to_csv("output_filtered_species_consolidated/osprey_ca_condor_output.csv", index=False)
 
 def main():
     #if not os.path.exists("output_filtered_species_consolidated"):
