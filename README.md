@@ -10,15 +10,22 @@ pip install -r requirements.txt
 
 Generates the map images that become map animations, showing bird sightings over time.
 - `data_preprocessing/maps_generation.py`
+    - Start date (maps): datetime.date(2023, 3, 1)
+    - End date (maps): datetime.date(2025, 8, 31)
+
 Makes animations from images of bird GPS locations. (in North America: US, Canada, Mexico, Cuba)
 - `combine_maps_video.py`
 
+
 Prepares input files to make logistic regressions. (restricted to certain geographic regions)
 - `data_preprocessing/restricted_geo_loc_appearance_weekly.py`
+    - Start date (logistic regression): datetime.date(2015, 3, 1)
+    - End date (logistic regression): datetime.date(2025, 8, 31)
+
 Makes logistic regression graphs. (restricted to certain geographic regions)
 - `analysis/logistic_regression.py`
 
-## GPS ranges by species
+## GPS regions by species (for boolean appearance variables in logistic regression)
 Osprey
 Glacier Bay Region
 58.0, -137.0
