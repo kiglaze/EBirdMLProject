@@ -8,7 +8,8 @@ pip install -r requirements.txt
 - `data_preprocessing.py`: Script for data cleaning and preprocessing.
 - `data_interpretation.py`: ML
 
-
+Generates the map images that become map animations, showing bird sightings over time.
+- `data_preprocessing/maps_generation.py`
 Makes animations from images of bird GPS locations. (in North America: US, Canada, Mexico, Cuba)
 - `combine_maps_video.py`
 
