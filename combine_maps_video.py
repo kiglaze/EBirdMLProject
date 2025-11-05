@@ -2,18 +2,33 @@ from pathlib import Path
 import imageio.v2 as imageio  # pip install imageio imageio-ffmpeg
 import os
 
+MAP_OUTPUT_DIR = "map_output"
+MAP_OUTPUT_DBSCAN_DIR = "map_output/dbscan"
+MAP_OUTPUT_RAW_DIR = "map_output/raw"
+WEEKLY_FOLDER = "weekly"
+SEASONAL_FOLDER = "seasonal"
+
 def main():
-    # "map_output_raw"
-    #combine_imgs_to_video("map_output_osprey_raw")
-    #combine_imgs_to_video("map_output_ca_condor_raw")
+    # Map animations output.
 
-    combine_imgs_to_video("map_output_osprey_dbscan_weekly")
-    combine_imgs_to_video("map_output_osprey_raw_weekly")
-    combine_imgs_to_video("map_output_osprey_dbscan_seasonal")
-    combine_imgs_to_video("map_output_osprey_raw_seasonal")
+    combine_imgs_to_video(f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}", "map_output_osprey_dbscan_weekly")
+    combine_imgs_to_video(f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}", "map_output_osprey_raw_weekly")
+    combine_imgs_to_video(f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}", "map_output_osprey_dbscan_seasonal")
+    combine_imgs_to_video(f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}", "map_output_osprey_raw_seasonal")
+
+    # combine_imgs_to_video(f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}", "map_output_puffin_raw_weekly")
+    # combine_imgs_to_video(f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}", "map_output_puffin_raw_seasonal")
+    # combine_imgs_to_video(f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}", "map_output_puffin_dbscan_weekly")
+    # combine_imgs_to_video(f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}", "map_output_puffin_dbscan_seasonal")
+
+    # combine_imgs_to_video(f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}", "map_output_ca_condor_raw_weekly")
+    # combine_imgs_to_video(f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}", "map_output_ca_condor_raw_seasonal")
+    # combine_imgs_to_video(f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}", "map_output_ca_condor_dbscan_weekly")
+    # combine_imgs_to_video(f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}", "map_output_ca_condor_dbscan_seasonal")
 
 
-def combine_imgs_to_video(input_image_directory):
+def combine_imgs_to_video(input_image_parent_directory, input_image_immediate_dir_name):
+    input_image_directory = Path(input_image_parent_directory, input_image_immediate_dir_name)
     folder = Path(input_image_directory)
     frames = sorted(folder.glob("frame_*.png"))  # adjust pattern if needed
     if not frames:
@@ -36,8 +51,12 @@ def combine_imgs_to_video(input_image_directory):
     # Create directory "animations" if it doesn't exist
     if not os.path.exists("animations"):
         os.makedirs("animations")
+    if not os.path.exists(f"animations/{input_image_parent_directory}"):
+        os.makedirs(f"animations/{input_image_parent_directory}")
 
-    with imageio.get_writer(f"animations/{input_image_directory}_animation.mp4", fps=2, codec="libx264", macro_block_size=None) as writer:
+
+    file_full_path_name = f"animations/{input_image_parent_directory}/{input_image_immediate_dir_name}_animation.mp4"
+    with imageio.get_writer(file_full_path_name, fps=2, codec="libx264", macro_block_size=None) as writer:
         for p in frames:
             writer.append_data(read_and_fit(p))
     print(f"Wrote {input_image_directory}_animation.mp4")
