@@ -4,30 +4,29 @@ import pandas as pd
 import datetime
 import os
 
-from dataclasses import dataclass
-
-@dataclass
-class Region:
-    lat_range: tuple
-    lon_range: tuple
+from helpers.data_filtration_helper import getOspreyGlacierBayRegion, getCondorGrandCanyonRegion, getAtlPuffinMACoastalRegion, filter_df_by_region
+from models.RegionClass import RegionClass
 
 def main():
     start_date = datetime.date(2015, 3, 1)
     end_date = datetime.date(2025, 8, 31)
 
-    # osprey_df = prepare_species_data_by_country_time_range('osprey_data.csv', start_date, end_date)
+    osprey_df = prepare_species_data_by_country_time_range('osprey_data.csv', start_date, end_date)
 
     # Glacier Bay, Alaska -- 58°N to 60°N, 137°W to 135°W
-    # glacier_bay_region = Region((58.0, 60.0), (-137.0, -135.0))
-    # get_weekly_presence_by_loc_data(osprey_df, glacier_bay_region, "osprey_glacier_bay_weekly.csv")
+    glacier_bay_region = getOspreyGlacierBayRegion()
+    get_weekly_presence_by_loc_data(osprey_df, glacier_bay_region, "osprey_glacier_bay_weekly.csv")
 
     # Grand Canyon -- Latitude: 35.7°N to 36.5°N; Longitude: −113.5°W to −111.8°W
-    grand_canyon_region = Region((35.0, 37.0), (-113.0, -111.0))
+    grand_canyon_region = getCondorGrandCanyonRegion()
 
     ca_condor_df = prepare_species_data_by_country_time_range('california_condor_data.csv', start_date, end_date)
     get_weekly_presence_by_loc_data(ca_condor_df, grand_canyon_region, "ca_condor_grand_canyon_weekly.csv")
 
-    # altantic_puffin_df = prepare_species_data_by_country_time_range('atlantic_puffin_data.csv', start_date, end_date)
+    # 41.724641, -70.255132
+    ma_coastal_region = getAtlPuffinMACoastalRegion()
+    atlantic_puffin_df = prepare_species_data_by_country_time_range('atlantic_puffin_data.csv', start_date, end_date)
+    get_weekly_presence_by_loc_data(atlantic_puffin_df, ma_coastal_region, "atlantic_puffin_ma_coastal_weekly.csv")
 
 
 def prepare_species_data_by_country_time_range(input_species_filename: str, start_date, end_date) -> Any:
@@ -47,7 +46,7 @@ def prepare_species_data_by_country_time_range(input_species_filename: str, star
     return df
 
 
-def get_weekly_presence_by_loc_data(df, glacier_bay_region: Region, output_filename):
+def get_weekly_presence_by_loc_data(df, glacier_bay_region: RegionClass, output_filename):
     first_obs_date = df['OBSERVATION DATE'].min()
     last_obs_date = df['OBSERVATION DATE'].max()
 
@@ -73,16 +72,7 @@ def get_weekly_presence_by_loc_data(df, glacier_bay_region: Region, output_filen
     df_week_year = df_week_year.sort_values(['YEAR', 'WEEK_IN_YEAR']).reset_index(drop=True)
     print(df_week_year)
 
-    lat_range = glacier_bay_region.lat_range
-    lon_range = glacier_bay_region.lon_range
-
-    # Filter DataFrame to only include points within the Glacier Bay region
-    df_gb = df[(df['LATITUDE'] >= lat_range[0]) & (df['LATITUDE'] <= lat_range[1]) &
-               (df['LONGITUDE'] >= lon_range[0]) & (df['LONGITUDE'] <= lon_range[1])]
-
-    # Example: print the number of records and show a preview
-    print(f"Number of records in Glacier Bay region: {len(df_gb)}")
-    print(df_gb.head())
+    df_gb = filter_df_by_region(df, glacier_bay_region)
 
     # Group by YEAR and WEEK_IN_YEAR
     grouped = df_gb.groupby(['YEAR', 'WEEK_IN_YEAR'])
