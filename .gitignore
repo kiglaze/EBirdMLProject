@@ -1,3 +1,6 @@
 output_filtered_species_consolidated/osprey_ca_condor_output.csv.gz
 helpers/__pycache__
 models/__pycache__/
+.DS_Store
+.idea/
+__pycache__/
