@@ -9,7 +9,7 @@ from helpers.data_filtration_helper import filter_df_by_region, filter_df_by_obs
 START_DATE_TEXT = "2015-03-01"
 END_DATE_TEXT = "2025-08-31"
 
-RESTRICTED_GEO_LOC_OUTPUT_DIR = "../data_preprocessing/output_by_species/restricted_by_geo_time"
+RESTRICTED_GEO_LOC_OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output_by_species/restricted_by_geo_time"
 
 def open_csv_file(filepath):
     df = pd.read_csv(filepath, dtype="string")
@@ -114,6 +114,9 @@ if __name__ == "__main__":
     condor_grand_canyon_region = getCondorGrandCanyonRegion()
     condor_grand_canyon_df = filter_df_by_region(condor_df, condor_grand_canyon_region)
     condor_grand_canyon_df = filter_df_by_obs_date_range(condor_grand_canyon_df, START_DATE_TEXT, END_DATE_TEXT)
+
+    condor_grand_canyon_df_data_summary = DataSummarizationHelper(condor_grand_canyon_df)
+    condor_grand_canyon_df_data_summary.print_geo_range_date_range()
 
     # Write condor_grand_canyon_df to .csv file
     condor_grand_canyon_df.to_csv(
