@@ -1,7 +1,15 @@
 import pandas as pd
+from numpy.ma.extras import atleast_1d
+from pathlib import Path
+
 from helpers.data_retrieval_helper import DataRetrievalHelper, INPUT_BY_SPECIES_DIR_ADDED_COLS
 from helpers.data_summarization_helper import DataSummarizationHelper
-from helpers.data_filtration_helper import filter_df_by_region, getOspreyGlacierBayRegion, getCondorGrandCanyonRegion, getAtlPuffinMACoastalRegion
+from helpers.data_filtration_helper import filter_df_by_region, filter_df_by_obs_date_range, getOspreyGlacierBayRegion, getCondorGrandCanyonRegion, getAtlPuffinMACoastalRegion
+
+START_DATE_TEXT = "2015-03-01"
+END_DATE_TEXT = "2025-08-31"
+
+RESTRICTED_GEO_LOC_OUTPUT_DIR = "../data_preprocessing/output_by_species/restricted_by_geo_time"
 
 def open_csv_file(filepath):
     df = pd.read_csv(filepath, dtype="string")
@@ -51,7 +59,7 @@ if __name__ == "__main__":
     # Create DataRetrievalHelper object from helpers/data_retrieval_helper.py
     data_retrieval_helper = DataRetrievalHelper(INPUT_BY_SPECIES_DIR_ADDED_COLS)
 
-    read_csv_kwargs = {
+    read_csv_options = {
         "usecols": [
             "LATITUDE", "LONGITUDE", "COMMON NAME", "COUNTRY", "OBSERVATION DATE",
             "BEHAVIOR CODE", "OBSERVER ID", "OBSERVATION TYPE", "MONTH", "YEAR",
@@ -77,27 +85,51 @@ if __name__ == "__main__":
         },
         "parse_dates": ["OBSERVATION DATE"],
     }
-
-    data_retrieval_helper.reload_all(**read_csv_kwargs)
-
+    data_retrieval_helper.reload_all(**read_csv_options)
 
     osprey_df = data_retrieval_helper.osprey_df
-    #condor_df = data_retrieval_helper.condor_df
-    #alt_puffin_df = data_retrieval_helper.atl_puffin_df
+    condor_df = data_retrieval_helper.condor_df
+    atl_puffin_df = data_retrieval_helper.atl_puffin_df
 
     data_summarization_osprey_helper = DataSummarizationHelper(osprey_df)
     data_summarization_osprey_helper.define_dataframe_bounds()
+
     data_summarization_osprey_helper.print_geo_range_date_range()
 
+    # Osprey - Glacier Bay Region
     osprey_glacier_bay_region = getOspreyGlacierBayRegion()
     osprey_glacier_bay_df = filter_df_by_region(osprey_df, osprey_glacier_bay_region)
+    osprey_glacier_bay_df = filter_df_by_obs_date_range(osprey_glacier_bay_df, START_DATE_TEXT, END_DATE_TEXT)
 
     osprey_glacier_bay_df_data_summary = DataSummarizationHelper(osprey_glacier_bay_df)
     osprey_glacier_bay_df_data_summary.print_geo_range_date_range()
 
-    #condor_grand_canyon_region = getCondorGrandCanyonRegion()
-    #condor_grand_canyon_df = filter_df_by_region(condor_df, condor_grand_canyon_region)
+    # Write osprey_glacier_bay_df to .csv file
+    osprey_glacier_bay_df.to_csv(
+        Path(RESTRICTED_GEO_LOC_OUTPUT_DIR) / "osprey_glacier_bay_15_25_restricted.csv",
+        index=False
+    )
 
-    #atl_puffin_ma_coastal_region = getAtlPuffinMACoastalRegion()
-    #atl_puffin_ma_coastal_df = filter_df_by_region(alt_puffin_df, atl_puffin_ma_coastal_region)
+    # California Condor - Grand Canyon Region
+    condor_grand_canyon_region = getCondorGrandCanyonRegion()
+    condor_grand_canyon_df = filter_df_by_region(condor_df, condor_grand_canyon_region)
+    condor_grand_canyon_df = filter_df_by_obs_date_range(condor_grand_canyon_df, START_DATE_TEXT, END_DATE_TEXT)
+
+    # Write condor_grand_canyon_df to .csv file
+    condor_grand_canyon_df.to_csv(
+        Path(RESTRICTED_GEO_LOC_OUTPUT_DIR) / "ca_condor_grand_canyon_15_25_restricted.csv",
+        index=False
+    )
+
+    # Atlantic Puffin - Massachusetts Coastal Region
+    atl_puffin_ma_coastal_region = getAtlPuffinMACoastalRegion()
+    atl_puffin_ma_coastal_df = filter_df_by_region(atl_puffin_df, atl_puffin_ma_coastal_region)
+    atl_puffin_ma_coastal_df = filter_df_by_obs_date_range(atl_puffin_ma_coastal_df, START_DATE_TEXT, END_DATE_TEXT)
+
+    # Write atl_puffin_ma_coastal_df to .csv file
+    atl_puffin_ma_coastal_df.to_csv(
+        Path(RESTRICTED_GEO_LOC_OUTPUT_DIR) / "atl_puffin_ma_coastal_15_25_restricted.csv",
+        index=False
+    )
+
 

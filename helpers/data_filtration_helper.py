@@ -1,3 +1,4 @@
+import pandas as pd
 from models.RegionClass import RegionClass
 
 def filter_df_by_region(df, region: RegionClass):
@@ -16,6 +17,24 @@ def filter_df_by_region(df, region: RegionClass):
     filtered_df = df[
         (df['LATITUDE'] >= lat_min) & (df['LATITUDE'] <= lat_max) &
         (df['LONGITUDE'] >= lon_min) & (df['LONGITUDE'] <= lon_max)
+    ]
+    return filtered_df
+
+def filter_df_by_obs_date_range(df, start_date, end_date):
+    """
+    Filters the given DataFrame to only include rows within the specified observation date range.
+
+    Parameters:
+    - df: pandas.DataFrame with 'OBSERVATION DATE' column
+    - start_date: Start date as a pandas.Timestamp or string
+    - end_date: End date as a pandas.Timestamp or string
+
+    Returns:
+    - Filtered pandas.DataFrame
+    """
+    filtered_df = df[
+        (df['OBSERVATION DATE'] >= pd.Timestamp(start_date)) &
+        (df['OBSERVATION DATE'] <= pd.Timestamp(end_date))
     ]
     return filtered_df
 

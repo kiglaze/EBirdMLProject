@@ -25,6 +25,11 @@ Prepares input files to make logistic regressions. (restricted to certain geogra
 Makes logistic regression graphs. (restricted to certain geographic regions)
 - `analysis/logistic_regression.py`
 
+
+Getting data ready for decision tree models.
+- `data_preprocessing/add_environmental_data.py`
+
+
 ## GPS regions by species (for boolean appearance variables in logistic regression)
 Osprey
 Glacier Bay Region
