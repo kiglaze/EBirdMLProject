@@ -1,5 +1,5 @@
 import pandas as pd
-from helpers.data_retrieval_helper import DataRetrievalHelper
+from helpers.data_retrieval_helper import DataRetrievalHelper, INPUT_BY_SPECIES_DIR_ADDED_COLS
 from helpers.data_summarization_helper import DataSummarizationHelper
 from helpers.data_filtration_helper import filter_df_by_region, getOspreyGlacierBayRegion, getCondorGrandCanyonRegion, getAtlPuffinMACoastalRegion
 
@@ -49,7 +49,37 @@ def print_geo_range_date_range(species_df):
 
 if __name__ == "__main__":
     # Create DataRetrievalHelper object from helpers/data_retrieval_helper.py
-    data_retrieval_helper = DataRetrievalHelper()
+    data_retrieval_helper = DataRetrievalHelper(INPUT_BY_SPECIES_DIR_ADDED_COLS)
+
+    read_csv_kwargs = {
+        "usecols": [
+            "LATITUDE", "LONGITUDE", "COMMON NAME", "COUNTRY", "OBSERVATION DATE",
+            "BEHAVIOR CODE", "OBSERVER ID", "OBSERVATION TYPE", "MONTH", "YEAR",
+            "WEEK_IN_YEAR", "SEASON", "SEASON_INDEX", "SEASON_START_YEAR",
+            "LATITUDE_RADIANS", "LONGITUDE_RADIANS"
+        ],
+        "dtype": {
+            "LATITUDE": float,
+            "LONGITUDE": float,
+            "COMMON NAME": str,
+            "COUNTRY": str,
+            "BEHAVIOR CODE": str,
+            "OBSERVER ID": str,
+            "OBSERVATION TYPE": str,
+            "MONTH": int,
+            "YEAR": int,
+            "WEEK_IN_YEAR": int,
+            "SEASON": str,
+            "SEASON_INDEX": int,
+            "SEASON_START_YEAR": int,
+            "LATITUDE_RADIANS": float,
+            "LONGITUDE_RADIANS": float,
+        },
+        "parse_dates": ["OBSERVATION DATE"],
+    }
+
+    data_retrieval_helper.reload_all(**read_csv_kwargs)
+
 
     osprey_df = data_retrieval_helper.osprey_df
     #condor_df = data_retrieval_helper.condor_df

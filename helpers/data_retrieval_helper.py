@@ -2,11 +2,12 @@ import os
 from typing import Optional
 import pandas as pd
 
-INPUT_BY_SPECIES_DIR = "../data_preprocessing/output_by_species/originals"
+INPUT_BY_SPECIES_DIR_ORIGINALS = "../data_preprocessing/output_by_species/originals"
+INPUT_BY_SPECIES_DIR_ADDED_COLS = "../data_preprocessing/output_by_species/with_added_cols"
 
 class DataRetrievalHelper:
-    def __init__(self):
-        self.base_dir = INPUT_BY_SPECIES_DIR
+    def __init__(self, input_by_species_dir: str):
+        self.base_dir = input_by_species_dir
         self.osprey_filename = "osprey_data.csv"                 # fixed typo from original
         self.condor_filename = "california_condor_data.csv"
         self.atl_puffin_filename = "atlantic_puffin_data.csv"
