@@ -34,6 +34,9 @@ def get_region_weather_data_df(region: RegionClass, start_date, end_date):
     regional_max = combined_station_dfs[['tmax']].groupby(combined_station_dfs[['tmax']].index).max()
     regional_df = pd.concat([regional_avg, regional_min, regional_max], axis=1)
 
+    regional_df['week_number'] = pd.to_datetime(regional_df.index).isocalendar().week
+    regional_df['year'] = pd.to_datetime(regional_df.index).isocalendar().year
+
     print(regional_avg.head())
     return regional_df
 
@@ -49,17 +52,17 @@ if __name__ == '__main__':
     end_date = datetime(2025, 8, 31)
 
     # Make directory ../weather_data/ if it doesn't exist
-    if not os.path.exists("../weather_data/"):
-        os.makedirs("../weather_data/")
+    if not os.path.exists("../weather_data_daily/"):
+        os.makedirs("../weather_data_daily/")
 
     osprey_glacier_bay_region_weather_df = get_region_weather_data_df(osprey_glacier_bay_region, start_date, end_date)
     print(osprey_glacier_bay_region_weather_df.head())
-    osprey_glacier_bay_region_weather_df.to_csv("../weather_data/osprey_glacier_bay_region_weather_data.csv")
+    osprey_glacier_bay_region_weather_df.to_csv("../weather_data_daily/osprey_glacier_bay_region_weather_data.csv")
 
     condor_grand_canyon_region_weather_df = get_region_weather_data_df(condor_grand_canyon_region, start_date, end_date)
     print(condor_grand_canyon_region_weather_df.head())
-    condor_grand_canyon_region_weather_df.to_csv("../weather_data/condor_grand_canyon_region_weather_data.csv")
+    condor_grand_canyon_region_weather_df.to_csv("../weather_data_daily/condor_grand_canyon_region_weather_data.csv")
 
     atl_puffin_ma_coastal_region_weather_df = get_region_weather_data_df(atl_puffin_ma_coastal_region, start_date, end_date)
     print(atl_puffin_ma_coastal_region_weather_df.head())
-    atl_puffin_ma_coastal_region_weather_df.to_csv("../weather_data/atl_puffin_ma_coastal_region_weather_data.csv")
+    atl_puffin_ma_coastal_region_weather_df.to_csv("../weather_data_daily/atl_puffin_ma_coastal_region_weather_data.csv")
