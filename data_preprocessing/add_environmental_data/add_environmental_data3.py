@@ -41,6 +41,19 @@ def get_region_weather_data_df(region: RegionClass, start_date, end_date):
     return regional_df
 
 
+def extract_regional_weekly_weather_df(region_weather_daily_df):
+    cols_to_average = ['tavg', 'prcp', 'snow', 'wspd', 'pres', 'year', 'week_number']
+    regional_avg = region_weather_daily_df[cols_to_average].groupby(['year', 'week_number'])[
+        cols_to_average].mean(
+        numeric_only=True)
+    regional_min = region_weather_daily_df[['tmin', 'year', 'week_number']].groupby(
+        ['year', 'week_number']).min()
+    regional_max = region_weather_daily_df[['tmax', 'year', 'week_number']].groupby(
+        ['year', 'week_number']).max()
+    regional_weekly_df = pd.concat([regional_avg, regional_min, regional_max], axis=1)
+    return regional_weekly_df
+
+
 if __name__ == '__main__':
     # Define bounding box (min_lat, max_lat, min_lon, max_lon)
 
@@ -51,18 +64,30 @@ if __name__ == '__main__':
     start_date = datetime(2015, 3, 1)
     end_date = datetime(2025, 8, 31)
 
-    # Make directory ../weather_data/ if it doesn't exist
+    # Make directory ../weather_data_daily/ if it doesn't exist
     if not os.path.exists("../weather_data_daily/"):
         os.makedirs("../weather_data_daily/")
+    # Make directory ../weather_data_weekly/ if it doesn't exist
+    if not os.path.exists("../weather_data_weekly/"):
+        os.makedirs("../weather_data_weekly/")
 
     osprey_glacier_bay_region_weather_df = get_region_weather_data_df(osprey_glacier_bay_region, start_date, end_date)
     print(osprey_glacier_bay_region_weather_df.head())
     osprey_glacier_bay_region_weather_df.to_csv("../weather_data_daily/osprey_glacier_bay_region_weather_data.csv")
 
+    osprey_glacier_bay_region_weekly_weather_df = extract_regional_weekly_weather_df(osprey_glacier_bay_region_weather_df)
+    osprey_glacier_bay_region_weekly_weather_df.to_csv("../weather_data_weekly/osprey_glacier_bay_region_weekly_weather_data.csv")
+
     condor_grand_canyon_region_weather_df = get_region_weather_data_df(condor_grand_canyon_region, start_date, end_date)
     print(condor_grand_canyon_region_weather_df.head())
     condor_grand_canyon_region_weather_df.to_csv("../weather_data_daily/condor_grand_canyon_region_weather_data.csv")
 
+    condor_grand_canyon_region_weekly_weather_df = extract_regional_weekly_weather_df(condor_grand_canyon_region_weather_df)
+    condor_grand_canyon_region_weekly_weather_df.to_csv("../weather_data_weekly/condor_grand_canyon_region_weekly_weather_data.csv")
+
     atl_puffin_ma_coastal_region_weather_df = get_region_weather_data_df(atl_puffin_ma_coastal_region, start_date, end_date)
     print(atl_puffin_ma_coastal_region_weather_df.head())
     atl_puffin_ma_coastal_region_weather_df.to_csv("../weather_data_daily/atl_puffin_ma_coastal_region_weather_data.csv")
+
+    atl_puffin_ma_coastal_region_weekly_weather_df = extract_regional_weekly_weather_df(atl_puffin_ma_coastal_region_weather_df)
+    atl_puffin_ma_coastal_region_weekly_weather_df.to_csv("../weather_data_weekly/atl_puffin_ma_coastal_region_weekly_weather_data.csv")
