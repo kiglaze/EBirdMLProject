@@ -3,13 +3,14 @@ from typing import Any
 import pandas as pd
 import datetime
 import os
+from datetime import datetime, timedelta, date
 
 from helpers.data_filtration_helper import getOspreyGlacierBayRegion, getCondorGrandCanyonRegion, getAtlPuffinMACoastalRegion, filter_df_by_region
 from models.RegionClass import RegionClass
 
 def main():
-    start_date = datetime.date(2015, 3, 1)
-    end_date = datetime.date(2025, 8, 31)
+    start_date = date(2015, 3, 1)
+    end_date = date(2025, 8, 31)
 
     osprey_df = prepare_species_data_by_country_time_range('osprey_data.csv', start_date, end_date)
 
@@ -50,21 +51,7 @@ def get_weekly_presence_by_loc_data(df, glacier_bay_region: RegionClass, output_
     first_obs_date = df['OBSERVATION DATE'].min()
     last_obs_date = df['OBSERVATION DATE'].max()
 
-    # get last year and first year
-    first_year = first_obs_date.year
-    last_year = last_obs_date.year
-
-    # get first week of first year
-    first_week_first_year = first_obs_date.isocalendar()[1]
-    last_week_last_year = last_obs_date.isocalendar()[1]
-
-    week_year_combinations = []
-    for year in range(first_year, last_year + 1):
-        start_week = first_week_first_year if year == first_year else 1
-        end_week = last_week_last_year if year == last_year else 52
-        for week in range(start_week, end_week + 1):
-            week_year_combinations.append((year, week))
-            print(f"Year: {year}, Week: {week}")
+    week_year_combinations = get_week_year_combs_betw_dates(first_obs_date, last_obs_date)
 
     # Create a DataFrame from the week_year_combinations list
     df_week_year = pd.DataFrame(week_year_combinations, columns=['YEAR', 'WEEK_IN_YEAR'])
@@ -93,6 +80,30 @@ def get_weekly_presence_by_loc_data(df, glacier_bay_region: RegionClass, output_
         os.makedirs(export_directory)
     # You can now proceed with further analysis or export
     df_week_year.to_csv(f"{export_directory}/{output_filename}", index=False)
+
+# Get all week number and year value combinations between two dates.
+def get_week_year_combs_betw_dates(first_obs_date, last_obs_date):
+    dates = get_dates_between_timestamps(first_obs_date, last_obs_date)
+
+    week_year_combinations = []
+    for date in dates:
+        week = date.isocalendar().week
+        year = date.isocalendar().year
+        week_year_combinations.append((year, week))
+
+    week_year_combinations = sorted(set(week_year_combinations))
+    return week_year_combinations
+
+
+def get_dates_between_timestamps(first_obs_date, last_obs_date):
+    # Get all dates between first and last observation date
+    first_obs_datetime = first_obs_date.to_pydatetime()
+    last_obs_datetime = last_obs_date.to_pydatetime()
+
+    delta = last_obs_datetime - first_obs_datetime
+    dates = [first_obs_datetime + timedelta(days=i) for i in range(delta.days + 1)]
+    print(dates)
+    return dates
 
 
 if __name__ == "__main__":
