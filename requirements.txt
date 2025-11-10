@@ -7,3 +7,6 @@ geopandas
 shapely
 scikit-learn
 numpy
+geopy
+tqdm
+meteostat
