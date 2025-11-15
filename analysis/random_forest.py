@@ -1,4 +1,3 @@
-# pip install scikit-learn pandas numpy matplotlib
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, TimeSeriesSplit
@@ -8,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestClassifier
 
-def make_random_forest_model(df):
+def make_random_forest_model(df, plot_title_text):
     week = df["week_number"].astype(float)
     df["week_sin"] = np.sin(2 * np.pi * week / 52)
     df["week_cos"] = np.cos(2 * np.pi * week / 52)
@@ -18,19 +17,15 @@ def make_random_forest_model(df):
     X = df[["week_sin", "week_cos", "year", "tavg", "tmin", "tmax", "prcp", "snow", "wspd", "pres"]]
     y = df["OBSERVATION_PRESENT"].astype(bool)
 
-    # ------------------------
-    # 2. Split data
-    # ------------------------
+    # Split data for training and testing
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=42, stratify=y
     )
 
-    # ------------------------
-    # 3. Define base model
-    # ------------------------
+    # Random Forest creation
     rf = RandomForestClassifier(
-        n_estimators=200,  # number of trees
-        max_depth=4,  # prevent overfitting
+        n_estimators=200,  # Number of decision trees
+        max_depth=4,
         min_samples_leaf=5,
         class_weight="balanced",
         random_state=42,
@@ -57,30 +52,34 @@ def make_random_forest_model(df):
     best_rf = grid.best_estimator_
     print("Best parameters:", grid.best_params_)
 
-    # ------------------------
-    # 5. Evaluate
-    # ------------------------
+    # Evaluate model
     y_pred = best_rf.predict(X_test)
     print("\nConfusion matrix:\n", confusion_matrix(y_test, y_pred))
     print("\nClassification report:\n", classification_report(y_test, y_pred, digits=3))
     print("Balanced accuracy:", balanced_accuracy_score(y_test, y_pred))
 
-    # ------------------------
-    # 6. Feature importance
-    # ------------------------
+    # Feature importance
     importances = pd.Series(best_rf.feature_importances_, index=X.columns).sort_values(ascending=False)
     print("\nFeature importances:\n", importances)
 
     plt.figure(figsize=(6, 4))
     importances.plot(kind="barh")
-    plt.title("Random Forest Feature Importance")
+    plt.title(plot_title_text, fontsize=16)
+
+    importances_bar_chart, dec_tree_diagram = plt.subplots(figsize=(14, 8))
+
     plot_tree(best_rf.estimators_[0],
               feature_names=X.columns,
               filled=True,
               rounded=True,
-              proportion=True, # show class proportions instead of raw counts
+              proportion=True,
               precision=2,
-              label='all')
+              label='all',
+              fontsize=16,
+              ax=dec_tree_diagram)
+    dec_tree_diagram.set_title(plot_title_text, fontsize=22)
+    plt.tight_layout()
+
     plt.show()
 
     print(export_text(best_rf.estimators_[0], feature_names=list(X.columns)))
@@ -90,6 +89,6 @@ if __name__ == '__main__':
     osprey_env_df = pd.read_csv(
         "../data_preprocessing/environmental_data_joined/osprey_glacier_bay_weekly_weather_observation_data.csv")
     ca_condor_env_df = pd.read_csv("../data_preprocessing/environmental_data_joined/ca_condor_grand_canyon_weekly_weather_observation_data.csv")
-    make_random_forest_model(alt_puffin_env_df)
-    make_random_forest_model(osprey_env_df)
-    make_random_forest_model(ca_condor_env_df)
+    make_random_forest_model(alt_puffin_env_df, "Atlantic Puffin - Massachusetts Coastal Area")
+    make_random_forest_model(osprey_env_df, "Osprey - Glacier Bay, Alaska")
+    make_random_forest_model(ca_condor_env_df, "California Condor - Grand Canyon")
