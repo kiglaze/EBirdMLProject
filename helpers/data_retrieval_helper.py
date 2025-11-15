@@ -1,9 +1,14 @@
 import os
 from typing import Optional
 import pandas as pd
+from pathlib import Path
 
-INPUT_BY_SPECIES_DIR_ORIGINALS = "../data_preprocessing/output_by_species/originals"
-INPUT_BY_SPECIES_DIR_ADDED_COLS = "../data_preprocessing/output_by_species/with_added_cols"
+# base directory of this module (helpers)
+BASE_DIR = Path(__file__).resolve().parent
+
+# keep the same relative layout as before but resolved to absolute paths
+INPUT_BY_SPECIES_DIR_ORIGINALS = (BASE_DIR / "data_preprocessing" / "output_by_species" / "originals").resolve()
+INPUT_BY_SPECIES_DIR_ADDED_COLS = (BASE_DIR / "data_preprocessing" / "output_by_species" / "with_added_cols").resolve()
 
 class DataRetrievalHelper:
     def __init__(self, input_by_species_dir: str):

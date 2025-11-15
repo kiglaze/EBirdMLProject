@@ -1,40 +1,39 @@
-import pandas as pd
-import folium
-import plotly.express as px
-import imageio
-import datetime
-import os
-import geopandas as gpd
-from shapely.geometry import Point
-from sklearn.cluster import DBSCAN
 import numpy as np
+from sklearn.cluster import DBSCAN
+
+EARTH_RADIUS_KM = 6371.0088
 
 def find_clusters_by_geo_loc_no_noise(df):
-    df = find_clusters_by_geo_loc(df)
-    print(len(df))
-    df_no_noise = df[df['CLUSTER'] != -1]
-    print(len(df_no_noise))
-    return df_no_noise
+    # Compute labels without expanding df
+    labels = _dbscan_labels_from_latlon_deg(
+        df["LATITUDE"], df["LONGITUDE"],
+        eps_km=50.0, min_samples=5  # consider raising min_samples from 2
+    )
 
-# observation_date in format '2025-08-31'
-def find_clusters_by_geo_loc(df):
-    coords_radians = df[["LATITUDE_RADIANS", "LONGITUDE_RADIANS"]].to_numpy()
+    # One filtered copy for output
+    mask = labels != -1
+    out = df.loc[mask].copy()
+    out["CLUSTER"] = labels[mask].astype(np.int32, copy=False)
 
-    # Define eps in km and convert to radians
-    earth_radius_km = 6371.0088
-    eps_km = 50.0  # 50 km neighborhood
-    eps_rad = eps_km / earth_radius_km
+    # Optional: debug sizes without materializing huge prints
+    print(f"rows_in: {len(df)}, rows_no_noise: {len(out)}")
+    return out
 
-    # Run DBSCAN with haversine distance, which works with latitude and longitude in radians
-    db = DBSCAN(
+def _dbscan_labels_from_latlon_deg(lat_deg, lon_deg, eps_km=50.0, min_samples=5):
+    # Compact float32 radians matrix
+    lat = lat_deg.to_numpy(dtype=np.float32, copy=False)
+    lon = lon_deg.to_numpy(dtype=np.float32, copy=False)
+    X = np.radians(np.column_stack((lat, lon)))   # (N,2) float32
+
+    eps_rad = eps_km / EARTH_RADIUS_KM
+    labels = DBSCAN(
         eps=eps_rad,
-        min_samples=2,
+        min_samples=min_samples,
         metric="haversine",
-        algorithm="ball_tree"
-    ).fit(coords_radians)
+        algorithm="ball_tree",
+        n_jobs=1,
+    ).fit_predict(X)
 
-    df = df.assign(CLUSTER=db.labels_)
-    return df
-
-# if __name__ == "__main__":
-#     main()
+    # Free the large temporary asap
+    del X
+    return labels

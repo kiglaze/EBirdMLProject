@@ -37,9 +37,9 @@ def generate_cyclical_log_reg_plots(df: DataFrame, species_name, location_name):
     plt.figure(figsize=(10, 6))
     plt.scatter(df['WEEK_IN_YEAR'], y, alpha=0.2, label='Observations')
     plt.plot(week_grid, pred_probs, label='Cyclic Logistic Regression', color='red')
-    plt.xlabel('Week In Year')
-    plt.ylabel(f"Probability of {species_name} Presence")
-    plt.title(f"{location_name} (2015-2025): {species_name} Presence vs. Week of Year (Cyclic Logistic Regression)")
+    plt.xlabel('Week In Year', fontsize=20)
+    plt.ylabel(f"Probability of Sighting", fontsize=20)
+    plt.title(f"{location_name} (2015-2025): {species_name} \nPresence vs. Week of Year (Cyclic Logistic Regression)", fontsize=22)
     plt.legend()
     plt.tight_layout()
 

@@ -1,7 +1,5 @@
 import pandas as pd
-import folium
 import plotly.express as px
-import imageio
 import datetime
 import os
 import numpy as np
@@ -11,12 +9,28 @@ import plotly.io as pio
 import json, urllib.request, shutil
 from dbscan import find_clusters_by_geo_loc_no_noise
 import plotly.graph_objects as go
+from enum import Enum
 
 MAP_OUTPUT_DIR = "map_output"
 MAP_OUTPUT_DBSCAN_DIR = "map_output/dbscan"
 MAP_OUTPUT_RAW_DIR = "map_output/raw"
 WEEKLY_FOLDER = "weekly"
 SEASONAL_FOLDER = "seasonal"
+
+class SpeciesEnum(Enum):
+    OSPREY = "Osprey"
+    ATLANTIC_PUFFIN = "Atlantic Puffin"
+    CALIFORNIA_CONDOR = "California Condor"
+
+    def value(self):
+        return self.value
+
+class DbscanModeEnum(Enum):
+    RAW = "Raw"
+    DBSCAN = "DBSCAN"
+
+    def value(self):
+        return self.value
 
 TOPO_DIR = os.path.abspath("plotly_topojson")
 FILES = [
@@ -55,14 +69,25 @@ def ensure_topojson():
     # New, non-deprecated API:
     pio.defaults.topojson = TOPO_DIR
 
-def main():
+def main(species_name=SpeciesEnum.OSPREY, dbscan_mode=DbscanModeEnum.RAW, is_seasonal_only=False):
     ensure_topojson()
 
-    input_filename_by_species = "atlantic_puffin_data.csv"
+    input_filename_by_species = "osprey_data.csv"
+    if species_name == SpeciesEnum.OSPREY:
+        input_filename_by_species = "osprey_data.csv"
+    elif species_name == SpeciesEnum.ATLANTIC_PUFFIN:
+        input_filename_by_species = "atlantic_puffin_data.csv"
+    elif species_name == SpeciesEnum.CALIFORNIA_CONDOR:
+        input_filename_by_species = "california_condor_data.csv"
+    else:
+        raise ValueError(f"Unknown species name: {species_name}")
+
+    #input_filename_by_species = "atlantic_puffin_data.csv"
+    #input_filename_by_species = "osprey_data.csv"
     #input_filename_by_species = "california_condor_data.csv"
     # Load csv file into pandas dataframe: output_filtered_species_consolidated/osprey_ca_condor_output.csv
     df = pd.read_csv(
-        f"data_preprocessing/output_by_species/with_added_cols/{input_filename_by_species}",
+        f"output_by_species/with_added_cols/{input_filename_by_species}",
         usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE', 'MONTH', 'YEAR', 'WEEK_IN_YEAR', 'SEASON', 'SEASON_INDEX', 'SEASON_START_YEAR', 'LATITUDE_RADIANS', 'LONGITUDE_RADIANS'],
         dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str, 'MONTH': int, 'YEAR': int, 'WEEK_IN_YEAR': int, 'SEASON': str, 'SEASON_INDEX': int, 'SEASON_START_YEAR': int, 'LATITUDE_RADIANS': float, 'LONGITUDE_RADIANS': float},
         parse_dates=['OBSERVATION DATE']
@@ -70,23 +95,36 @@ def main():
 
     df = df[df['COUNTRY'].isin(['United States', 'Mexico', 'Canada', 'Cuba'])].copy()
 
-    # Osprey
-    # generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}/map_output_osprey_raw_weekly", False, False, 1)
-    # generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}/map_output_osprey_dbscan_weekly", False, True, 1)
-    # generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}/map_output_osprey_raw_seasonal", True, False, 0.1)
-    # generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}/map_output_osprey_dbscan_seasonal", True, True, 0.1)
-
-    # Atlantic Puffins
-    #generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}/map_output_puffin_raw_weekly", False, False, 1)
-    #generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}/map_output_puffin_dbscan_weekly", False, True, 1)
-    #generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}/map_output_puffin_raw_seasonal", True, False, 0.4)
-    #generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}/map_output_puffin_dbscan_seasonal", True, True, 0.4)
-
-    # California Condors
-    #generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}/map_output_ca_condor_raw_weekly", False, False, 1)
-    #generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}/map_output_ca_condor_dbscan_weekly", False, True, 1)
-    #generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}/map_output_ca_condor_raw_seasonal", True, False, 1)
-    #generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}/map_output_ca_condor_dbscan_seasonal", True, True, 1)
+    if species_name == SpeciesEnum.OSPREY:
+        # Osprey
+        if dbscan_mode == DbscanModeEnum.RAW:
+            if not is_seasonal_only:
+                generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}/map_output_osprey_raw_weekly", False, False, 1)
+            generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}/map_output_osprey_raw_seasonal", True, False, 0.1)
+        elif dbscan_mode == DbscanModeEnum.DBSCAN:
+            if not is_seasonal_only:
+                generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}/map_output_osprey_dbscan_weekly", False, True, 1)
+            generate_raw_maps(df, "Osprey", f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}/map_output_osprey_dbscan_seasonal", True, True, 0.1)
+    elif species_name == SpeciesEnum.ATLANTIC_PUFFIN:
+        # Atlantic Puffins
+        if dbscan_mode == DbscanModeEnum.RAW:
+            if not is_seasonal_only:
+                generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}/map_output_puffin_raw_weekly", False, False, 1)
+            generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}/map_output_puffin_raw_seasonal", True, False, 0.4)
+        elif dbscan_mode == DbscanModeEnum.DBSCAN:
+            if not is_seasonal_only:
+                generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}/map_output_puffin_dbscan_weekly", False, True, 1)
+            generate_raw_maps(df, "Atlantic Puffin", f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}/map_output_puffin_dbscan_seasonal", True, True, 0.4)
+    elif species_name == SpeciesEnum.CALIFORNIA_CONDOR:
+        # California Condors
+        if dbscan_mode == DbscanModeEnum.RAW:
+            if not is_seasonal_only:
+                generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_RAW_DIR}/{WEEKLY_FOLDER}/map_output_ca_condor_raw_weekly", False, False, 1)
+            generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_RAW_DIR}/{SEASONAL_FOLDER}/map_output_ca_condor_raw_seasonal", True, False, 1)
+        elif dbscan_mode == DbscanModeEnum.DBSCAN:
+            if not is_seasonal_only:
+                generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_DBSCAN_DIR}/{WEEKLY_FOLDER}/map_output_ca_condor_dbscan_weekly", False, True, 1)
+            generate_raw_maps(df, "California Condor", f"{MAP_OUTPUT_DBSCAN_DIR}/{SEASONAL_FOLDER}/map_output_ca_condor_dbscan_seasonal", True, True, 1)
 
 def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True, running_dbscan=False, sample_frac=1.0):
     df = df[df['COMMON NAME'] == species_name]
@@ -101,16 +139,6 @@ def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True,
     sorted_years = np.sort(df['YEAR'].unique())
 
     sorted_season_start_years = np.sort(df['SEASON_START_YEAR'].unique())
-
-    sorted_weeks = np.sort(df['WEEK_IN_YEAR'].unique())
-
-    if len(sorted_weeks) == 0:
-        max_sorted_week = 52
-    else:
-        max_sorted_week = max(52, np.max(sorted_weeks))
-
-    frames = sorted(df['OBSERVATION DATE'].dt.strftime('%Y-%m-%d').unique())
-    images = []
 
     # Create directory "map_output" if it doesn't exist
     if not os.path.exists(output_directory_name):
@@ -132,7 +160,9 @@ def generate_raw_maps(df, species_name, output_directory_name, is_seasonal=True,
             time.sleep(0.5)
     else:
         for year in sorted_years:
-            for week_idx in range(1, max_sorted_week+1):
+            last_day_of_year = pd.Timestamp(year, 12, 31)
+            number_of_weeks = last_day_of_year.isocalendar().week
+            for week_idx in range(1, number_of_weeks+1):
                 dfi = df[(df['YEAR'] == year) & (df['WEEK_IN_YEAR'] == week_idx)]
                 if sample_frac < 1:
                     dfi = dfi.sample(frac=sample_frac, random_state=1)
@@ -182,7 +212,8 @@ def generate_plot_map(dfi, img_path: str, plot_title: str, time_increment_indica
         fig.update_layout(
             width=750,
             height=500,
-            margin=dict(l=60, r=180, t=70, b=0)
+            margin=dict(l=60, r=180, t=70, b=0),
+            font=dict(size=20)
         )
     else:
         # Create a real GEO figure even with no points
@@ -221,20 +252,11 @@ def generate_plot_map(dfi, img_path: str, plot_title: str, time_increment_indica
 
 
 if __name__ == "__main__":
-    main()
-    # ensure_topojson()
-    # input_filename_by_species = "california_condor_data.csv"
-    # df = pd.read_csv(
-    #     f"data_preprocessing/output_by_species/with_added_cols/{input_filename_by_species}",
-    #     usecols=['LATITUDE', 'LONGITUDE', 'COMMON NAME', 'COUNTRY', 'OBSERVATION DATE', 'BEHAVIOR CODE', 'OBSERVER ID', 'OBSERVATION TYPE', 'MONTH', 'YEAR', 'WEEK_IN_YEAR', 'SEASON', 'SEASON_INDEX', 'SEASON_START_YEAR', 'LATITUDE_RADIANS', 'LONGITUDE_RADIANS'],
-    #     dtype={'LATITUDE': float, 'LONGITUDE': float, 'COMMON NAME': str, 'COUNTRY': str, 'BEHAVIOR CODE': str, 'OBSERVER ID': str, 'OBSERVATION TYPE': str, 'MONTH': int, 'YEAR': int, 'WEEK_IN_YEAR': int, 'SEASON': str, 'SEASON_INDEX': int, 'SEASON_START_YEAR': int, 'LATITUDE_RADIANS': float, 'LONGITUDE_RADIANS': float},
-    #     parse_dates=['OBSERVATION DATE']
-    # )
-    # # Filter df so that no rows are selected
-    # # Select only first row of dataframe df
-    # df = df[0:1]
-    #
-    #
-    # #df = df[df['COMMON NAME'] != "California Condor"]
-    # print(f"Number of rows after filtering: {len(df)}")
-    # generate_plot_map(df, "example1.png", "Testing No Data Points", 11, 2024)
+    #main(SpeciesEnum.CALIFORNIA_CONDOR, DbscanModeEnum.DBSCAN, True) #RAN
+    main(SpeciesEnum.OSPREY, DbscanModeEnum.DBSCAN) #RAN
+    #main(SpeciesEnum.ATLANTIC_PUFFIN, DbscanModeEnum.DBSCAN, True) #RAN
+
+    main(SpeciesEnum.OSPREY, DbscanModeEnum.RAW) #RAN
+    #main(SpeciesEnum.ATLANTIC_PUFFIN, DbscanModeEnum.RAW) #RAN
+    #main(SpeciesEnum.CALIFORNIA_CONDOR, DbscanModeEnum.RAW) #RAN
+

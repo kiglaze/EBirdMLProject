@@ -36,6 +36,8 @@ def get_region_weather_data_df(region: RegionClass, start_date, end_date):
 
     regional_df['week_number'] = pd.to_datetime(regional_df.index).isocalendar().week
     regional_df['year'] = pd.to_datetime(regional_df.index).isocalendar().year
+    #regional_df['month'] = pd.to_datetime(regional_df.index).isocalendar().month
+    #regional_df['season'] = pd.to_datetime(regional_df.index).isocalendar().season
 
     print(regional_avg.head())
     return regional_df
